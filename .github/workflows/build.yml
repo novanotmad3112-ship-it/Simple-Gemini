@@ -17,7 +17,7 @@ jobs:
       - name: Build App
         run: |
           xcodebuild clean build \
-            -project Simple-Gemini.xcodeproj \
+            -project GeminiChatBot.xcodeproj \
             -scheme Simple-Gemini \
             -sdk iphoneos \
             -configuration Release \
