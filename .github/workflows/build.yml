@@ -1,1 +1,39 @@
+name: Build Unsigned IPA
 
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build App
+        run: |
+          xcodebuild clean build \
+            -project Simple-Gemini.xcodeproj \
+            -scheme Simple-Gemini \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            BUILD_DIR=build
+
+      - name: Package to IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/Release-iphoneos/Simple-Gemini.app Payload/
+          zip -r Simple-Gemini-Unsigned.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Simple-Gemini-IPA
+          path: Simple-Gemini-Unsigned.ipa
