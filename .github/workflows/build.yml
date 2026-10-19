@@ -73,8 +73,16 @@ jobs:
       - name: Package to IPA
         run: |
           mkdir -p Payload
-          # Quét toàn bộ thư mục tìm tệp kết thúc bằng .app và loại trừ các thư mục rác/cache
-          APP_PATH=$(find . -name "*.app" -type d | grep -v "SourcePackages" | grep -v "CoreSimulator" | head -n 1)
+          
+          echo "=== DEBUG FILE TREE ==="
+          find . -name "*.app" -type d || true
+          
+          APP_PATH=$(find build_output -name "*.app" -type d | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find . -name "*.app" -type d | grep -v "SourcePackages" | grep -v "CoreSimulator" | head -n 1)
+          fi
+          
           echo "Found compiled app at: $APP_PATH"
           
           if [ -z "$APP_PATH" ]; then
