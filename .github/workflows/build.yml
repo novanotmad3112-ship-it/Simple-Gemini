@@ -23,35 +23,56 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>API_KEY</key>
-              <string>AIzaSyYourActualApiKeyHere</string>
+              <string>AQ.Ab8RN6JxIZQagG5pcRtNqSShRhZRNuiraSVY6Cya8t1RUzRDiA</string>
           </dict>
           </plist>
           EOF
 
+      - name: Install Pods
+        run: |
+          if [ -f "Podfile" ]; then
+            pod install
+          fi
+
       - name: Build App
         run: |
-          # 1. Tự động tìm file .xcodeproj bất kể tên gì
-          PROJECT_FILE=$(find . -name "*.xcodeproj" -maxdepth 2 | head -n 1)
-          echo "Found project: $PROJECT_FILE"
-          
-          # 2. Tự động liệt kê và lấy tên Scheme đầu tiên
-          SCHEME_NAME=$(xcodebuild -project "$PROJECT_FILE" -list | grep -A 10 "Schemes:" | tail -n +2 | head -n 1 | xargs)
-          echo "Detected Scheme: $SCHEME_NAME"
+          # Kiểm tra xem có file .xcworkspace (CocoaPods) hay không để ưu tiên sử dụng
+          if find . -name "*.xcworkspace" -maxdepth 2 | grep -q .; then
+            WORKSPACE_FILE=$(find . -name "*.xcworkspace" -maxdepth 2 | head -n 1)
+            echo "Found workspace: $WORKSPACE_FILE"
+            
+            SCHEME_NAME=$(xcodebuild -workspace "$WORKSPACE_FILE" -list | grep -A 10 "Schemes:" | tail -n +2 | head -n 1 | xargs)
+            echo "Detected Scheme: $SCHEME_NAME"
 
-          # 3. Tiến hành Build app cho iOS (Arm64)
-          xcodebuild clean build \
-            -project "$PROJECT_FILE" \
-            -scheme "$SCHEME_NAME" \
-            -sdk iphoneos \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            BUILD_DIR=build
+            xcodebuild clean build \
+              -workspace "$WORKSPACE_FILE" \
+              -scheme "$SCHEME_NAME" \
+              -sdk iphoneos \
+              -configuration Release \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              BUILD_DIR=build
+          else
+            PROJECT_FILE=$(find . -name "*.xcodeproj" -maxdepth 2 | head -n 1)
+            echo "Found project: $PROJECT_FILE"
+            
+            SCHEME_NAME=$(xcodebuild -project "$PROJECT_FILE" -list | grep -A 10 "Schemes:" | tail -n +2 | head -n 1 | xargs)
+            echo "Detected Scheme: $SCHEME_NAME"
+
+            xcodebuild clean build \
+              -project "$PROJECT_FILE" \
+              -scheme "$SCHEME_NAME" \
+              -sdk iphoneos \
+              -configuration Release \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              BUILD_DIR=build
+          fi
 
       - name: Package to IPA
         run: |
-          # 4. Tự động đóng gói file .app bất kể tên gì thành tệp .ipa
           mkdir -p Payload
           find build/Release-iphoneos -name "*.app" -maxdepth 1 -exec cp -r {} Payload/ \;
           zip -r Gemini-App-Unsigned.ipa Payload
