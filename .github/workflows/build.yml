@@ -23,7 +23,7 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>API_KEY</key>
-              <string>AQ.Ab8RN6JxIZQagG5pcRtNqSShRhZRNuiraSVY6Cya8t1RUzRDiA</string>
+              <string>AIzaSyYourActualApiKeyHere</string>
           </dict>
           </plist>
           EOF
