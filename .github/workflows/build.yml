@@ -36,7 +36,6 @@ jobs:
 
       - name: Build App
         run: |
-          # Kiểm tra xem có file .xcworkspace (CocoaPods) hay không để ưu tiên sử dụng
           if find . -name "*.xcworkspace" -maxdepth 2 | grep -q .; then
             WORKSPACE_FILE=$(find . -name "*.xcworkspace" -maxdepth 2 | head -n 1)
             echo "Found workspace: $WORKSPACE_FILE"
@@ -49,10 +48,10 @@ jobs:
               -scheme "$SCHEME_NAME" \
               -sdk iphoneos \
               -configuration Release \
+              -derivedDataPath build_output \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              BUILD_DIR=build
+              CODE_SIGNING_ALLOWED=NO
           else
             PROJECT_FILE=$(find . -name "*.xcodeproj" -maxdepth 2 | head -n 1)
             echo "Found project: $PROJECT_FILE"
@@ -65,16 +64,18 @@ jobs:
               -scheme "$SCHEME_NAME" \
               -sdk iphoneos \
               -configuration Release \
+              -derivedDataPath build_output \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              BUILD_DIR=build
+              CODE_SIGNING_ALLOWED=NO
           fi
 
       - name: Package to IPA
         run: |
           mkdir -p Payload
-          find build/Release-iphoneos -name "*.app" -maxdepth 1 -exec cp -r {} Payload/ \;
+          APP_PATH=$(find build_output -name "*.app" | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
           zip -r Gemini-App-Unsigned.ipa Payload
           echo "IPA packaged successfully!"
 
