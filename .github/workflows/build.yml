@@ -73,8 +73,15 @@ jobs:
       - name: Package to IPA
         run: |
           mkdir -p Payload
-          APP_PATH=$(find build_output -name "*.app" | head -n 1)
+          # Quét toàn bộ thư mục tìm tệp kết thúc bằng .app và loại trừ các thư mục rác/cache
+          APP_PATH=$(find . -name "*.app" -type d | grep -v "SourcePackages" | grep -v "CoreSimulator" | head -n 1)
           echo "Found compiled app at: $APP_PATH"
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "Lỗi: Không tìm thấy tệp .app nào sau khi build!"
+            exit 1
+          fi
+          
           cp -r "$APP_PATH" Payload/
           zip -r Gemini-App-Unsigned.ipa Payload
           echo "IPA packaged successfully!"
